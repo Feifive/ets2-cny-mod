@@ -2,10 +2,9 @@
 {
 mod_package : .package_name
 {
-	display_name: "人民币货币 Chinese Currency (CNY 实时汇率)"
 	package_version: "1.0.20261007"
 	author: "Ze"
-	category[]: "economy"
+	category[]: "other"
 	icon: "mod_icon.jpg"
 	description_file: "mod_description.txt"
 }

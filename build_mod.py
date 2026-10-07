@@ -115,20 +115,25 @@ def main() -> int:
     year, month, day = today.year, today.month, today.day
     version = f"1.0.{year}{month:02d}{day:02d}"
 
-    manifest = (
-        "SiiNunit\n"
-        "{\n"
-        "mod_package : .package_name\n"
-        "{\n"
-        f"\tdisplay_name: \"人民币货币 Chinese Currency (CNY 实时汇率)\"\n"
-        f"\tpackage_version: \"{version}\"\n"
-        f"\tauthor: \"Ze\"\n"
-        "\tcategory[]: \"economy\"\n"
-        "\ticon: \"mod_icon.jpg\"\n"
-        "\tdescription_file: \"description.txt\"\n"
-        "}\n"
-        "}\n"
-    )
+    def make_manifest(display_name=None, description="description.txt"):
+        # 分类必须取自官方合法列表；工坊版不写 display_name（mod名由工坊页面提供）
+        name_line = f"\tdisplay_name: \"{display_name}\"\n" if display_name else ""
+        return (
+            "SiiNunit\n"
+            "{\n"
+            "mod_package : .package_name\n"
+            "{\n"
+            + name_line
+            + f"\tpackage_version: \"{version}\"\n"
+            + "\tauthor: \"Ze\"\n"
+            + "\tcategory[]: \"other\"\n"
+            + "\ticon: \"mod_icon.jpg\"\n"
+            + f"\tdescription_file: \"{description}\"\n"
+            "}\n"
+            "}\n"
+        )
+
+    manifest = make_manifest("人民币货币 Chinese Currency (CNY 实时汇率)")
     description = (
         f"人民币货币 mod — 每日自动更新 EUR/CNY 汇率\n"
         f"当前汇率: 1 EUR = {rate:.4f} CNY ({rate_date}, 来源: {source})\n"
@@ -164,7 +169,7 @@ def main() -> int:
         "}\n"
     )
     (WORKSHOP / "versions.sii").write_text("\ufeff" + versions, encoding="utf-8")
-    ws_manifest = manifest.replace('"description.txt"', '"mod_description.txt"')
+    ws_manifest = make_manifest(description="mod_description.txt")
     (pkg / "manifest.sii").write_text("\ufeff" + ws_manifest, encoding="utf-8")
     (pkg / "mod_description.txt").write_text("\ufeff" + description, encoding="utf-8")
     (pkg / "def/economy_data.sii").write_text(def_text, encoding="utf-8")
