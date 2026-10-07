@@ -1,0 +1,10 @@
+# SII/SCS 文件保持原始字节，禁止换行符转换
+*.sii -text
+*.scs -text
+
+# 脚本与配置统一换行符，保证 CI 与本地一致
+*.yml text eol=lf
+*.py text eol=lf
+*.ps1 text eol=crlf
+*.md text eol=lf
+*.json text eol=lf
