@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 TEMPLATE = ROOT / "template" / "economy_data.base.sii"
+ICON = ROOT / "assets" / "mod_icon.jpg"
 DIST = ROOT / "dist"
 MOD_NAME = "ets2_cny_currency.scs"
 RATE_FILE = DIST / "rate.json"
@@ -122,6 +123,7 @@ def main() -> int:
         f"\tpackage_version: \"{version}\"\n"
         f"\tauthor: \"Ze\"\n"
         "\tcategory[]: \"economy\"\n"
+        "\ticon: \"mod_icon.jpg\"\n"
         "\tdescription_file: \"description.txt\"\n"
         "}\n"
         "}\n"
@@ -135,13 +137,16 @@ def main() -> int:
     )
 
     mod_file = DIST / MOD_NAME
+    files = {
+        "manifest.sii": manifest,
+        "description.txt": description,
+        "def/economy_data.sii": def_text,
+    }
+    if ICON.exists():
+        files["mod_icon.jpg"] = ICON.read_bytes()
     write_zip(
         mod_file,
-        {
-            "manifest.sii": manifest,
-            "description.txt": description,
-            "def/economy_data.sii": def_text,
-        },
+        files,
         fixed_date=(year, month, day, 12, 0, 0),
     )
     RATE_FILE.write_text(
