@@ -71,6 +71,8 @@ ets2-cny-mod/
 ├── dist/
 │   ├── ets2_cny_currency.scs     # 构建产物（zip格式），玩家直接下载使用
 │   └── rate.json                 # 当前汇率与构建信息
+├── workshop/                     # SCS Workshop Uploader 上传用文件夹格式
+├── assets/                       # 预览图与模组图标
 ├── tools/update_mod.ps1          # 玩家本地自动下载脚本
 └── .github/workflows/update.yml  # 每日定时构建工作流
 ```
@@ -83,12 +85,13 @@ GitHub 版本内容完全一致）。
 1. **安装上传工具**：Steam → 库 → 上方筛选"工具" → 搜索 **SCS Workshop Uploader** → 安装
 2. **运行并登录**：启动 SCS Workshop Uploader，用 Steam 账号登录（需要输入 Steam 令牌验证码）
 3. **创建条目**：点 "Create New Mod" → 游戏选 Euro Truck Simulator 2 → 选择
-   `dist/ets2_cny_currency.scs` → 填写标题/描述 → 预览图用
+   **`workshop/` 文件夹**（注意是文件夹，不是dist里的scs文件——Uploader要求包含
+   `versions.sii` 的mod文件夹）→ 填写标题/描述 → 预览图用
    [`assets/workshop_preview.jpg`](assets/workshop_preview.jpg) → 可见性先设
    **Private** 自测，没问题再改 Public
 4. **验证**：游戏内模组管理器能看到并启用该 mod（与本地版二选一，不要同时启用）
-5. **日常更新**：打开 Uploader → 选中该 mod → 重新选择最新的
-   `dist/ets2_cny_currency.scs` → Upload 即可，工坊订阅者会自动收到更新
+5. **日常更新**：打开 Uploader → 选中该 mod → 重新选择最新的 `workshop/` 文件夹 →
+   Upload 即可，工坊订阅者会自动收到更新
 
 > 提示：创意工坊的标题、描述、预览图在 Uploader 里维护，与 mod 包内的 manifest 相互独立。
 > 工坊描述里可以附上本仓库链接，玩家即可获得每日更新的 GitHub 版和 `update_mod.ps1` 脚本。

@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parent
 TEMPLATE = ROOT / "template" / "economy_data.base.sii"
 ICON = ROOT / "assets" / "mod_icon.jpg"
 DIST = ROOT / "dist"
+WORKSHOP = ROOT / "workshop"  # SCS Workshop Uploader 专用文件夹格式
 MOD_NAME = "ets2_cny_currency.scs"
 RATE_FILE = DIST / "rate.json"
 
@@ -149,6 +150,26 @@ def main() -> int:
         files,
         fixed_date=(year, month, day, 12, 0, 0),
     )
+
+    # 生成创意工坊上传格式：versions.sii + universal/ 子文件夹（SCS Workshop Uploader 要求）
+    pkg = WORKSHOP / "universal"
+    (pkg / "def").mkdir(parents=True, exist_ok=True)
+    versions = (
+        "SiiNunit\n"
+        "{\n"
+        "package_version_info : .universal\n"
+        "{\n"
+        "\tpackage_name: \"universal\"\n"
+        "}\n"
+        "}\n"
+    )
+    (WORKSHOP / "versions.sii").write_text("\ufeff" + versions, encoding="utf-8")
+    ws_manifest = manifest.replace('"description.txt"', '"mod_description.txt"')
+    (pkg / "manifest.sii").write_text("\ufeff" + ws_manifest, encoding="utf-8")
+    (pkg / "mod_description.txt").write_text("\ufeff" + description, encoding="utf-8")
+    (pkg / "def/economy_data.sii").write_text(def_text, encoding="utf-8")
+    if ICON.exists():
+        (pkg / "mod_icon.jpg").write_bytes(ICON.read_bytes())
     RATE_FILE.write_text(
         json.dumps(
             {
