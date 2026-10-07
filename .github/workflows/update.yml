@@ -1,0 +1,46 @@
+name: 每日更新汇率并构建mod
+
+on:
+  schedule:
+    # GitHub Actions 使用 UTC 时间。00:30 UTC = 北京时间 08:30
+    # 选奇数分钟可降低高峰期延迟
+    - cron: "30 0 * * *"
+  workflow_dispatch: {}   # 允许在 Actions 页面手动触发
+  push:
+    branches: [main]
+    paths: [build_mod.py, "template/**", ".github/workflows/update.yml"]
+
+permissions:
+  contents: write   # 允许工作流把新汇率提交回仓库
+
+concurrency:
+  group: update-rate
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 获取汇率并构建mod
+        run: python build_mod.py
+
+      - name: 提交新汇率
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          if git diff --cached --quiet; then
+            echo "汇率无变化，跳过提交"
+          else
+            git commit -m "chore: 更新汇率 $(date -u +%F)"
+            git pull --rebase origin main
+            git push
+          fi
