@@ -6,10 +6,17 @@
 
 - 当前汇率见 [dist/rate.json](dist/rate.json)
 - 每日构建记录见 Actions 页面和 git 提交历史（每一天的汇率都被永久记录）
+- **Steam 创意工坊**：<https://steamcommunity.com/sharedfiles/filedetails/?id=3815224566>
+  （游戏内直接订阅；工坊版本手动更新，想追每日汇率用下面的脚本）
 
 ## 玩家使用方法
 
-### 1. 获取 mod
+### 0. Steam 创意工坊（最简单）
+
+[创意工坊页面](https://steamcommunity.com/sharedfiles/filedetails/?id=3815224566)
+点订阅即可，游戏会自动下载。适合不介意汇率偶尔滞后几天的玩家。
+
+### 1. 每日汇率自动更新（GitHub 版）
 
 **方式 A：自动更新脚本（推荐）**
 
