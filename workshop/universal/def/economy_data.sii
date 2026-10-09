@@ -290,7 +290,7 @@ economy_data : economy.data.storage
 	currency_sign3[]: ""
 
 	currency_code[]: "CNY"
-	currency_ratio[]: 7.4937
+	currency_ratio[]: 7.4972
 	currency_sign1[]: ""
 	currency_sign2[]: "¥"
 	currency_sign3[]: ""
