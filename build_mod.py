@@ -31,12 +31,17 @@ RATE_MIN, RATE_MAX = 5.0, 15.0
 TIMEOUT = 30
 
 # 追加在原版最后一个货币（RSD）之后的 CNY 货币块
+#
+# 货币符号必须用全角 ￥（"\uffe5"）：游戏 UI 位图字体（font/normal.font 等）
+# 没有半角 ¥（U+00A5）字形，缺字形的字符会被引擎直接跳过（表现为没有货币符号）；
+# 全角 ￥ 与 €/₽ 等一样存在于全部 UI 字体中。注意别混入长得一样的
+# 半角韩元 ₩（U+FFA5）。
 CNY_BLOCK = (
     "\n"
     "\tcurrency_code[]: \"CNY\"\n"
     "\tcurrency_ratio[]: {ratio}\n"
     "\tcurrency_sign1[]: \"\"\n"
-    "\tcurrency_sign2[]: \"¥\"\n"
+    "\tcurrency_sign2[]: \"\uffe5\"\n"
     "\tcurrency_sign3[]: \"\"\n"
 )
 
@@ -168,11 +173,12 @@ def main() -> int:
         "}\n"
         "}\n"
     )
-    (WORKSHOP / "versions.sii").write_text("\ufeff" + versions, encoding="utf-8")
+    # newline="\n" 保证本地 Windows 与 CI Linux 构建输出一致（行尾不产生 git diff 噪音）
+    (WORKSHOP / "versions.sii").write_text("\ufeff" + versions, encoding="utf-8", newline="\n")
     ws_manifest = make_manifest(description="mod_description.txt")
-    (pkg / "manifest.sii").write_text("\ufeff" + ws_manifest, encoding="utf-8")
-    (pkg / "mod_description.txt").write_text("\ufeff" + description, encoding="utf-8")
-    (pkg / "def/economy_data.sii").write_text(def_text, encoding="utf-8")
+    (pkg / "manifest.sii").write_text("\ufeff" + ws_manifest, encoding="utf-8", newline="\n")
+    (pkg / "mod_description.txt").write_text("\ufeff" + description, encoding="utf-8", newline="\n")
+    (pkg / "def/economy_data.sii").write_text(def_text, encoding="utf-8", newline="\n")
     if ICON.exists():
         (pkg / "mod_icon.jpg").write_bytes(ICON.read_bytes())
     RATE_FILE.write_text(
@@ -188,6 +194,7 @@ def main() -> int:
         )
         + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     print(f"[info] 已生成 {mod_file} ({mod_file.stat().st_size} 字节)")
     return 0
