@@ -20,6 +20,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
@@ -33,14 +35,88 @@ jobs:
         run: python build_mod.py
 
       - name: 提交新汇率
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dist/ workshop/
           if git diff --cached --quiet; then
             echo "汇率无变化，跳过提交"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore: 更新汇率 $(date -u +%F)"
             git pull --rebase origin main
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+  # 无头发布创意工坊（steamcmd workshop_build_item）。
+  # 需要配置仓库 Secrets（缺省时此 job 自动跳过，不影响构建）：
+  #   STEAM_USERNAME       Steam 账号名
+  #   STEAM_PASSWORD       Steam 密码
+  #   STEAM_TOTP_SECRET    （手机令牌 2FA）令牌 shared_secret（base64）
+  #   或 STEAM_SENTRY      （邮箱 Guard）steamcmd 登录缓存的 config.vdf（base64）
+  # 详见 README「用 GitHub Actions 自动发布创意工坊版」。
+  publish-workshop:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ secrets.STEAM_USERNAME != '' && needs.build.outputs.changed == 'true' }}
+    steps:
+      - name: 检出仓库（含刚提交的新构建）
+        uses: actions/checkout@v4
+
+      - name: 生成 VDF
+        run: python tools/workshop_vdf.py "$GITHUB_WORKSPACE/build.vdf"
+
+      - name: 安装 steamcmd
+        run: |
+          mkdir -p "$HOME/steamcmd"
+          curl -sSL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+            | tar -zxf - -C "$HOME/steamcmd"
+
+      - name: 恢复登录缓存（邮箱 Guard 账号，若配置）
+        if: ${{ secrets.STEAM_SENTRY != '' }}
+        run: |
+          mkdir -p "$HOME/steamcmd/Steam/config" "$HOME/.steam/steam/config"
+          echo "${{ secrets.STEAM_SENTRY }}" | base64 -d > "$HOME/steamcmd/Steam/config/config.vdf"
+          cp "$HOME/steamcmd/Steam/config/config.vdf" "$HOME/.steam/steam/config/config.vdf"
+
+      - name: 上传到创意工坊
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+          STEAM_TOTP_SECRET: ${{ secrets.STEAM_TOTP_SECRET }}
+        run: |
+          set -euo pipefail
+          # 手机令牌账号：用 shared_secret 现算 2FA 码
+          TOTP=""
+          if [ -n "$STEAM_TOTP_SECRET" ]; then
+            TOTP=$(python3 tools/steam_totp.py)
+          fi
+
+          LOGIN=(+login "$STEAM_USERNAME" "$STEAM_PASSWORD")
+          [ -n "$TOTP" ] && LOGIN+=("$TOTP")
+
+          ok=0
+          for attempt in 1 2; do
+            echo "[info] 第 $attempt 次尝试登录并上传..."
+            # shellcheck disable=SC2068
+            if "$HOME/steamcmd/steamcmd.sh" \
+                +@ShutdownOnFailedCommand 1 \
+                +@NoPromptForPassword 1 \
+                ${LOGIN[@]} \
+                +workshop_build_item "$GITHUB_WORKSPACE/build.vdf" \
+                +quit | tee steamcmd.log; then
+              if grep -q "Success" steamcmd.log; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 10
+          done
+
+          if [ "$ok" != 1 ]; then
+            echo "[error] 创意工坊上传失败，请检查 Actions 日志中的 steamcmd 输出"
+            exit 1
+          fi
+          echo "[OK] 创意工坊已更新"

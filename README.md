@@ -104,6 +104,50 @@ GitHub 版本内容完全一致）。
 5. **日常更新**：打开 Uploader → 选中该 mod → 重新选择最新的 `workshop/` 文件夹 →
    Upload 即可，工坊订阅者会自动收到更新
 
+也可以不开 GUI，直接无头上传（复用 mod_tools.exe 的 steam_api64.dll，
+Steam 客户端已登录即可）：
+
+```powershell
+python tools/workshop_upload.py --change-note "更新汇率"
+```
+
+### 用 GitHub Actions 每天自动发布创意工坊版
+
+工作流已内置 `publish-workshop` job（`steamcmd + workshop_build_item`），
+每天汇率构建后会自动推送到创意工坊；**汇率无变化时自动跳过**（周末不打扰订阅者）。
+未配置 Secrets 时该 job 静默跳过，不影响每日构建。
+
+需要一次性配置仓库 Secrets（Settings → Secrets and variables → Actions）：
+
+| Secret | 说明 |
+|---|---|
+| `STEAM_USERNAME` | Steam 账号名 |
+| `STEAM_PASSWORD` | Steam 密码 |
+| `STEAM_TOTP_SECRET` | **手机令牌账号**：令牌的 shared_secret（base64），CI 现算 5 位动态码 |
+| 或 `STEAM_SENTRY` | **邮箱 Guard 账号**（未开手机令牌）：steamcmd 登录缓存 `config.vdf` 的 base64 |
+
+两种 Guard 模式的取值方法：
+
+- **手机令牌（2FA）**：shared_secret 无法从 Steam 官方导出，需用
+  [SteamDesktopAuthenticator](https://github.com/Jessecar96/SteamDesktopAuthenticator)
+  等工具在迁移/导入令牌时备份。`STEAM_TOTP_SECRET` 存的就是备份里的
+  `shared_secret` 字段。
+- **邮箱 Guard**：在本机做一次 steamcmd 登录（只需输一次邮箱验证码），
+  把登录缓存转成 base64 存为 `STEAM_SENTRY`：
+
+  ```powershell
+  Invoke-WebRequest https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip -OutFile steamcmd.zip
+  Expand-Archive steamcmd.zip -DestinationPath steamcmd
+  .\steamcmd\steamcmd.exe +login 你的账号名 +quit   # 输一次密码+邮箱验证码
+  [Convert]::ToBase64String((Get-Content .\steamcmd\config\config.vdf -AsByteStream -Raw))
+  # 上面这行输出就是 STEAM_SENTRY 的值
+  ```
+
+配置完成后可在 Actions 页面手动 Run workflow 验证一次。
+安全说明：Secrets 只在本仓库受信任的工作流中可见（外部 PR 触发的工作流拿不到），
+日志中会自动打码；但 Steam 密码会随配置存在 GitHub，介意的话就不要开启此功能，
+继续用上面的本地无头脚本。
+
 > 提示：创意工坊的标题、描述、预览图在 Uploader 里维护，与 mod 包内的 manifest 相互独立。
 > 工坊描述里可以附上本仓库链接，玩家即可获得每日更新的 GitHub 版和 `update_mod.ps1` 脚本。
 
