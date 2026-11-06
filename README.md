@@ -66,7 +66,9 @@ mod 覆盖的是 `def/economy_data.sii`（含全游戏经济参数）。游戏�
 建议每个大版本更新一次模板：
 
 1. 用 [SCS 官方解包工具](https://modding.scssoft.com/wiki/Documentation/Tools/Game_Archive_Extractor)
-   解包游戏目录下的 `def.scs`
+   解包游戏目录下的 `def.scs`。1.55+ 必须用页面上的 `LINK (1.55+)` 64 位版
+   （`scs_extractor_1_55.zip`）；`def.scs` 是 HashFS v2，不能直接当 zip 打开。
+   命令行：`scs_extractor.exe def.scs <输出目录>`
 2. 用解出来的 `def/economy_data.sii` 覆盖 `template/economy_data.base.sii`
 3. 本地跑 `python build_mod.py` 确认无报错后提交推送
 
@@ -78,7 +80,7 @@ mod 覆盖的是 `def/economy_data.sii`（含全游戏经济参数）。游戏�
 ```
 ets2-cny-mod/
 ├── build_mod.py                  # 构建脚本：抓汇率 → 生成def → 打包mod
-├── template/economy_data.base.sii# 原版 def/economy_data.sii（游戏 1.61）
+├── template/economy_data.base.sii# 原版 def/economy_data.sii（游戏 1.62.1）
 ├── dist/
 │   ├── ets2_cny_currency.scs     # 构建产物（zip格式），玩家直接下载使用
 │   └── rate.json                 # 当前汇率与构建信息
